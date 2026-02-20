@@ -1156,21 +1156,18 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════ LOGIN MODAL ═══════════════════════ -->
+  <!-- ═══════════════════════ LOGIN MODAL (GOOGLE FORM) ═══════════════════════ -->
   <div class="login-modal" id="login-modal">
-    <div class="login-box" id="login-step-1">
-      <div class="login-title">เข้าสู่ระบบเพื่อเริ่มประเมิน</div>
-      <button class="social-btn btn-fb" onclick="selectLogin('Facebook')">Login with Facebook</button>
-      <button class="social-btn btn-x" onclick="selectLogin('X')">Login with X</button>
-      <button class="social-btn btn-gmail" onclick="selectLogin('Gmail')">Login with Gmail</button>
-      <button class="btn-back" style="margin-top: 1rem; width:100%" onclick="closeLoginModal()">ปิด</button>
-    </div>
-    <div class="login-box" id="login-step-2" style="display: none;">
-      <div class="login-title" id="login-prompt">ระบุบัญชีของคุณ</div>
-      <input type="text" class="login-input" id="login-input" placeholder="Username / Email">
-      <button class="btn-primary" style="width: 100%; margin-bottom: 1rem;"
-        onclick="submitLogin()">ตกลงและเริ่มประเมิน</button>
-      <button class="btn-back" style="width: 100%;" onclick="backToLoginStep1()">ย้อนกลับ</button>
+    <div class="login-box"
+      style="padding: 1rem; max-width: 600px; height: 80vh; display: flex; flex-direction: column;">
+      <div class="login-title" style="margin-bottom: 0.5rem; font-size: 1.2rem;">กรุณากรอกข้อมูลเพื่อเริ่มประเมิน</div>
+      <iframe
+        src="https://docs.google.com/forms/d/e/1FAIpQLSdtTT2wxS2UJdRICnhFZhFWdvzhBaMnCZ9L7ZnKtjpuOvESAQ/viewform?embedded=true"
+        width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0"
+        style="flex: 1; border-radius: 8px; background: #fff;">กำลังโหลด...</iframe>
+      <button class="btn-primary" style="margin-top: 1rem; width: 100%; padding: 1rem;"
+        onclick="closeLoginAndStart()">กรอกเสร็จแล้ว → เข้าสู่แบบประเมิน</button>
+      <button class="btn-back" style="margin-top: 0.5rem; width: 100%;" onclick="closeLoginModal()">ยกเลิก</button>
     </div>
   </div>
 
@@ -1781,50 +1778,17 @@
     let currentSection = 0;
     let userData = { platform: '', account: '', name: '', email: '', job: '' };
 
-    // === สำหรับการส่งข้อมูลไปยัง Google Sheet ===
-    // ให้นำ URL ของ Web App จาก Google Apps Script (ที่เชื่อมด้วย Sheet) มาใส่ที่นี่
-    const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
-    let selectedPlatform = '';
-
+    // === GOOGLE FORMS INTEGRATION ===
     function showLoginModal() {
       document.getElementById('login-modal').classList.add('active');
-      document.getElementById('login-step-1').style.display = 'block';
-      document.getElementById('login-step-2').style.display = 'none';
     }
 
     function closeLoginModal() {
       document.getElementById('login-modal').classList.remove('active');
     }
 
-    function selectLogin(platform) {
-      selectedPlatform = platform;
-      document.getElementById('login-step-1').style.display = 'none';
-      document.getElementById('login-step-2').style.display = 'block';
-      const promptMap = { 'Facebook': 'Facebook Username / Link', 'X': 'X (Twitter) Username', 'Gmail': 'Gmail Address' };
-      document.getElementById('login-prompt').textContent = `ระบุบัญชี ${platform} ของคุณ`;
-      document.getElementById('login-input').placeholder = promptMap[platform] || 'Username / Email';
-      document.getElementById('login-input').value = '';
-    }
-
-    function backToLoginStep1() {
-      document.getElementById('login-step-2').style.display = 'none';
-      document.getElementById('login-step-1').style.display = 'block';
-    }
-
-    function submitLogin() {
-      const val = document.getElementById('login-input').value.trim();
-      if (!val) { alert('กรุณาระบุข้อมูลบัญชีของคุณ'); return; }
-
-      userData.platform = selectedPlatform;
-      userData.account = val;
-      if (selectedPlatform === 'Gmail') userData.email = val;
-      userData.name = val.split('@')[0]; // fallback name
-
-      // ส่งข้อมูลไป Google Sheet ผ่าน Web App URL
-      try {
-        fetch(SCRIPT_URL + '?action=login&platform=' + encodeURIComponent(selectedPlatform) + '&account=' + encodeURIComponent(val), { mode: 'no-cors' }).catch(e => console.log(e));
-      } catch (e) { }
-
+    function closeLoginAndStart() {
+      // เมื่อผู้ใช้กดกรอกเสร็จแล้ว ปิด Modal และเริ่มประเมิน
       closeLoginModal();
       startAssessment();
     }
