@@ -252,6 +252,86 @@
       opacity: 0.7;
     }
 
+    /* LOGIN MODAL */
+    .login-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 15, 0.95);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .login-modal.active {
+      display: flex;
+    }
+
+    .login-box {
+      background: var(--surface);
+      padding: 2.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      color: white;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+
+    .social-btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-fb {
+      background: #1877F2;
+    }
+
+    .btn-x {
+      background: #000000;
+      border: 1px solid #333;
+    }
+
+    .btn-gmail {
+      background: #EA4335;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 0.8rem;
+      background: #111;
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+      font-family: inherit;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
     /* ASSESSMENT CONTAINER */
     .assessment {
       display: none;
@@ -1063,7 +1143,7 @@
         <span class="stat-label">นาที</span>
       </div>
     </div>
-    <button class="btn-primary" onclick="startAssessment()">เริ่มประเมินเลย →</button>
+    <button class="btn-primary" onclick="showLoginModal()">เริ่มประเมินเลย →</button>
     <div class="pillars-preview" style="margin-top: 2rem;">
       <div class="pillar-dot" style="background: var(--skill)"></div>
       <div class="pillar-dot" style="background: var(--content)"></div>
@@ -1075,6 +1155,24 @@
         · Content · Tech · Finance · Mindset</span>
     </div>
   </section>
+
+  <!-- ═══════════════════════ LOGIN MODAL ═══════════════════════ -->
+  <div class="login-modal" id="login-modal">
+    <div class="login-box" id="login-step-1">
+      <div class="login-title">เข้าสู่ระบบเพื่อเริ่มประเมิน</div>
+      <button class="social-btn btn-fb" onclick="selectLogin('Facebook')">Login with Facebook</button>
+      <button class="social-btn btn-x" onclick="selectLogin('X')">Login with X</button>
+      <button class="social-btn btn-gmail" onclick="selectLogin('Gmail')">Login with Gmail</button>
+      <button class="btn-back" style="margin-top: 1rem; width:100%" onclick="closeLoginModal()">ปิด</button>
+    </div>
+    <div class="login-box" id="login-step-2" style="display: none;">
+      <div class="login-title" id="login-prompt">ระบุบัญชีของคุณ</div>
+      <input type="text" class="login-input" id="login-input" placeholder="Username / Email">
+      <button class="btn-primary" style="width: 100%; margin-bottom: 1rem;"
+        onclick="submitLogin()">ตกลงและเริ่มประเมิน</button>
+      <button class="btn-back" style="width: 100%;" onclick="backToLoginStep1()">ย้อนกลับ</button>
+    </div>
+  </div>
 
   <!-- ═══════════════════════ ASSESSMENT ═══════════════════════ -->
   <section class="assessment" id="assessment">
@@ -1653,7 +1751,6 @@
       <div class="pdf-section">
         <div class="pdf-text">
           <h3>📄 PDF Report เต็มรูปแบบ</h3>
-          <p>รับรายงานสรุปผลการประเมิน พร้อม Action Plan และ Resource Guide ครบถ้วน ส่งไปยัง Email ที่ระบุ</p>
         </div>
         <button class="btn-pdf" onclick="downloadPDF()">⬇ ดาวน์โหลด PDF</button>
       </div>
@@ -1662,9 +1759,12 @@
       <div style="text-align:center; padding-bottom: 3rem;">
         <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem;">แชร์ผลการประเมินของคุณ</p>
         <div style="display:flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap;">
-          <button class="btn-back" onclick="shareResult('fb')">Facebook</button>
-          <button class="btn-back" onclick="shareResult('tw')">X (Twitter)</button>
-          <button class="btn-back" onclick="copyLink()">คัดลอกลิงก์</button>
+          <button class="social-btn btn-fb" style="width: auto; padding: 0.8rem 1.5rem;"
+            onclick="shareResult('fb')">แชร์บน Facebook</button>
+          <button class="social-btn btn-x" style="width: auto; padding: 0.8rem 1.5rem;"
+            onclick="shareResult('tw')">แชร์บน X (Twitter)</button>
+          <button class="btn-primary" style="width: auto; padding: 0.8rem 1.5rem; background:#333;"
+            onclick="copyLink()">คัดลอกลิงก์</button>
         </div>
       </div>
     </div>
@@ -1679,7 +1779,55 @@
 
     const answers = { 0: [null, null, null, null], 1: [null, null, null, null], 2: [null, null, null, null], 3: [null, null, null, null], 4: [null, null, null, null] };
     let currentSection = 0;
-    let userData = {};
+    let userData = { platform: '', account: '', name: '', email: '', job: '' };
+
+    // === สำหรับการส่งข้อมูลไปยัง Google Sheet ===
+    // ให้นำ URL ของ Web App จาก Google Apps Script (ที่เชื่อมด้วย Sheet) มาใส่ที่นี่
+    const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    let selectedPlatform = '';
+
+    function showLoginModal() {
+      document.getElementById('login-modal').classList.add('active');
+      document.getElementById('login-step-1').style.display = 'block';
+      document.getElementById('login-step-2').style.display = 'none';
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.remove('active');
+    }
+
+    function selectLogin(platform) {
+      selectedPlatform = platform;
+      document.getElementById('login-step-1').style.display = 'none';
+      document.getElementById('login-step-2').style.display = 'block';
+      const promptMap = { 'Facebook': 'Facebook Username / Link', 'X': 'X (Twitter) Username', 'Gmail': 'Gmail Address' };
+      document.getElementById('login-prompt').textContent = `ระบุบัญชี ${platform} ของคุณ`;
+      document.getElementById('login-input').placeholder = promptMap[platform] || 'Username / Email';
+      document.getElementById('login-input').value = '';
+    }
+
+    function backToLoginStep1() {
+      document.getElementById('login-step-2').style.display = 'none';
+      document.getElementById('login-step-1').style.display = 'block';
+    }
+
+    function submitLogin() {
+      const val = document.getElementById('login-input').value.trim();
+      if (!val) { alert('กรุณาระบุข้อมูลบัญชีของคุณ'); return; }
+
+      userData.platform = selectedPlatform;
+      userData.account = val;
+      if (selectedPlatform === 'Gmail') userData.email = val;
+      userData.name = val.split('@')[0]; // fallback name
+
+      // ส่งข้อมูลไป Google Sheet ผ่าน Web App URL
+      try {
+        fetch(SCRIPT_URL + '?action=login&platform=' + encodeURIComponent(selectedPlatform) + '&account=' + encodeURIComponent(val), { mode: 'no-cors' }).catch(e => console.log(e));
+      } catch (e) { }
+
+      closeLoginModal();
+      startAssessment();
+    }
 
     function selectOption(el, sec, q, score) {
       const card = el.closest('.question-card');
@@ -1753,7 +1901,8 @@
 
     // ═══════════════ RESULTS ═══════════════
     function showResults() {
-      userData = { name: 'ผู้ประเมิน', email: '', job: '' };
+      // Name is from login (fallback to "ผู้ประเมิน")
+      if (!userData.name) userData.name = 'ผู้ประเมิน';
 
       document.getElementById('email-section').classList.remove('active');
       document.getElementById('results-section').classList.add('active');
@@ -1961,10 +2110,10 @@
       const { total } = calcScores();
       const tier = getTier(total);
       const tierLabels = { 'explorer': 'Explorer', 'builder': 'Builder', 'solo-ceo': 'Solo CEO' };
-      const text = `ฉันเพิ่งทำ Solo Readiness Assessment ได้คะแนน ${total}/100 เป็น ${tierLabels[tier]}! คุณพร้อมแค่ไหนกับธุรกิจคนเดียว?`;
-      const url = window.location.href;
+      const text = `ผลการประเมินการเป็น One Person Business Assessment ของฉันได้คะแนน ${total}/100 เป็น ${tierLabels[tier]}! คุณพร้อมแค่ไหนกับธุรกิจคนเดียว? \n\nhttps://one-person-business.vercel.app/`;
+      const url = `https://one-person-business.vercel.app/`; // Force standard url tracking on share
       if (platform === 'fb') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
-      else if (platform === 'tw') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+      else if (platform === 'tw') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
     }
 
     function copyLink() {
