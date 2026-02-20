@@ -1156,20 +1156,28 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════ LOGIN MODAL (GOOGLE FORM) ═══════════════════════ -->
+  <!-- ═══════════════════════ LOGIN MODAL (CUSTOM NATIVE FORM) ═══════════════════════ -->
   <div class="login-modal" id="login-modal">
-    <div class="login-box"
-      style="padding: 1rem; max-width: 600px; height: 80vh; display: flex; flex-direction: column;">
-      <div class="login-title" style="margin-bottom: 0.5rem; font-size: 1.2rem;">กรุณากรอกข้อมูลเพื่อเริ่มประเมิน</div>
-      <iframe
-        src="https://docs.google.com/forms/d/e/1FAIpQLSdtTT2wxS2UJdRICnhFZhFWdvzhBaMnCZ9L7ZnKtjpuOvESAQ/viewform?embedded=true"
-        width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0"
-        style="flex: 1; border-radius: 8px; background: #fff;">กำลังโหลด...</iframe>
-      <button class="btn-primary" style="margin-top: 1rem; width: 100%; padding: 1rem;"
-        onclick="closeLoginAndStart()">กรอกเสร็จแล้ว → เข้าสู่แบบประเมิน</button>
-      <button class="btn-back" style="margin-top: 0.5rem; width: 100%;" onclick="closeLoginModal()">ยกเลิก</button>
+    <div class="login-box" id="login-container">
+      <div class="login-title">กรุณากรอกข้อมูลเพื่อเริ่มประเมิน</div>
+      <p style="color: var(--muted); margin-bottom: 2rem; font-size: 0.9rem;">ระบุ Username หรือ Email
+        ของคุณเพื่อรับผลลัพธ์ที่แม่นยำที่สุด</p>
+
+      <form
+        action="https://docs.google.com/forms/d/e/1FAIpQLSdtTT2wxS2UJdRICnhFZhFWdvzhBaMnCZ9L7ZnKtjpuOvESAQ/formResponse"
+        method="POST" target="hidden_iframe" onsubmit="submitted=true;">
+
+        <input type="text" class="login-input" name="entry.560692503" id="entry.560692503"
+          placeholder="Username / Email" required>
+
+        <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 1rem;">ตกลงและเริ่มประเมิน</button>
+      </form>
+      <button class="btn-back" style="width: 100%;" onclick="closeLoginModal()">ยกเลิก</button>
     </div>
   </div>
+
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+    onload="if(submitted) { closeLoginAndStart(); }"></iframe>
 
   <!-- ═══════════════════════ ASSESSMENT ═══════════════════════ -->
   <section class="assessment" id="assessment">
@@ -1776,7 +1784,8 @@
 
     const answers = { 0: [null, null, null, null], 1: [null, null, null, null], 2: [null, null, null, null], 3: [null, null, null, null], 4: [null, null, null, null] };
     let currentSection = 0;
-    let userData = { platform: '', account: '', name: '', email: '', job: '' };
+    let userData = { name: '', job: '' };
+    var submitted = false;
 
     // === GOOGLE FORMS INTEGRATION ===
     function showLoginModal() {
@@ -1788,7 +1797,14 @@
     }
 
     function closeLoginAndStart() {
-      // เมื่อผู้ใช้กดกรอกเสร็จแล้ว ปิด Modal และเริ่มประเมิน
+      // ดึงข้อมูลที่พิมพ์เพื่อเอาไปแสดงหน้า Results
+      let val = document.getElementById('entry.560692503').value;
+      if (val.includes('@')) {
+        userData.name = val.split('@')[0];
+      } else {
+        userData.name = val;
+      }
+
       closeLoginModal();
       startAssessment();
     }
